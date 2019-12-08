@@ -1,0 +1,252 @@
+package org.si.perpuskategori;
+
+import java.util.ArrayList;
+import org.json.JSONArray;
+import org.json.JSONException;
+import org.json.JSONObject;
+import android.os.Bundle;
+import android.app.Activity;
+import android.app.AlertDialog;
+import android.view.Menu;
+import android.view.View;
+import android.view.View.OnClickListener;
+import android.widget.*;
+import android.os.*;
+import android.graphics.*;
+import android.app.ActionBar.LayoutParams;
+import android.content.DialogInterface;
+
+public class MainActivity extends Activity implements OnClickListener {
+	
+	KategoriActivity kategoriActivity = new KategoriActivity();
+	TableLayout tableLayout;
+		Button buttonTambahKategori;
+		ArrayList<Button>buttonEdit = new ArrayList<Button>();
+		ArrayList<Button>buttonDelete = new ArrayList<Button>();
+		JSONArray arrayKategori;
+		
+		@Override
+		protected void onCreate (Bundle savedInstanceState) {
+			super.onCreate(savedInstanceState);
+			setContentView(R.layout.activity_main);
+			
+		//	Jika SD Android diatas API Ver.9
+			if (android.os.Build.VERSION.SDK_INT > 9) {
+				StrictMode.ThreadPolicy policy = new StrictMode.ThreadPolicy.Builder()
+				.permitAll().build();
+				StrictMode.setThreadPolicy(policy);         
+			}
+			
+		//	Mendapatkan data widget dari XML Activity melalui ID
+			tableLayout = (TableLayout) findViewById(R.id.tableKategori);
+			buttonTambahKategori = (Button) findViewById(R.id.buttonTambahKategori);
+			buttonTambahKategori.setOnClickListener(this);
+			
+		//	Menambah baris untuk tabel
+			TableRow barisTabel = new TableRow(this);
+			barisTabel.setBackgroundColor(Color.CYAN);
+			
+		//	Menambahkan tampilan teks untuk judul pada tabel
+			TextView viewHeaderId = new TextView(this);
+			TextView viewHeaderKategori = new TextView(this);
+			TextView viewHeaderAction = new TextView(this);
+			
+			viewHeaderId.setText("ID");
+			viewHeaderKategori.setText("Kategori");
+			viewHeaderAction.setText("Action");
+			
+			viewHeaderId.setPadding(5, 1, 5, 1);
+			viewHeaderKategori.setPadding(5, 1, 5, 1);
+			viewHeaderAction.setPadding(5, 1, 5, 1);
+			
+		//	Menampilkan tampilan TextView ke dalam tabel
+			barisTabel.addView(viewHeaderId);
+			barisTabel.addView(viewHeaderKategori);
+			barisTabel.addView(viewHeaderAction);
+			
+		//	Menyusun ukuran dari tabel
+			tableLayout.addView(barisTabel, new TableLayout.LayoutParams(LayoutParams.WRAP_CONTENT, LayoutParams.WRAP_CONTENT));
+			
+			try {
+				// Mengubah data dari KategoriActivity yang berupa String menjadi array
+				arrayKategori = new JSONArray(kategoriActivity.tampilKategori());
+				for (int i = 0; i < arrayKategori.length(); i++) {
+					JSONObject jsonChildNode = arrayKategori.getJSONObject(i);
+					String kategori = jsonChildNode.optString("kategori");
+					String id = jsonChildNode.optString("id");
+					
+					System.out.println("Kategori : " + kategori );
+					System.out.println("ID : " + id); 
+					
+					barisTabel = new TableRow(this);
+					
+					// Memberi warna pada baris tabel
+					if (i % 2 == 0) {
+						barisTabel.setBackgroundColor(Color.LTGRAY);
+					}
+					 
+	                TextView viewId = new TextView(this);
+	                viewId.setText(id);
+	                viewId.setPadding(5, 1, 5, 1);
+	                barisTabel.addView(viewId); 
+	 
+	                TextView viewKategori = new TextView(this);
+	                viewKategori.setText(kategori);
+	                viewKategori.setPadding(5, 1, 5, 1);
+	                barisTabel.addView(viewKategori);
+	 
+	                // Menambahkan button Edit
+	                buttonEdit.add(i, new Button(this));
+	                buttonEdit.get(i).setId(Integer.parseInt(id));
+	                buttonEdit.get(i).setTag("Edit");
+	                buttonEdit.get(i).setText("Edit");
+	                buttonEdit.get(i).setOnClickListener(this);
+	                barisTabel.addView(buttonEdit.get(i));
+	 
+	                // Menambahkan tombol Delete
+	                buttonDelete.add(i, new Button(this));
+	                buttonDelete.get(i).setId(Integer.parseInt(id));
+	                buttonDelete.get(i).setTag("Delete");
+	                buttonDelete.get(i).setText("Delete");
+	                buttonDelete.get(i).setOnClickListener(this);
+	                barisTabel.addView(buttonDelete.get(i));
+	                
+	                tableLayout.addView(barisTabel, new TableLayout.LayoutParams
+	                		(LayoutParams.MATCH_PARENT, LayoutParams.MATCH_PARENT));
+	            }
+			}
+			catch (JSONException e) {
+				e.printStackTrace();
+			}
+			}
+		public void onClick (View view) {
+			if (view.getId() == R.id.buttonTambahKategori) {
+				tambahKategori();
+			}
+			else {
+				for (int  i= 0; i < buttonEdit.size(); i++) {
+					// Jika ingin mengedit data pada kategori
+					if (view.getId() == buttonEdit.get(i).getId() && view.getTag().toString().trim().equals("Edit")) {
+						Toast.makeText(MainActivity.this, "Edit : " + buttonEdit.get(i).getId(), Toast.LENGTH_SHORT).show();
+						int id = buttonEdit.get(i).getId();
+						getDataByID(id);
+					}
+					// Menghapus data di Tabel
+					else if (view.getId() == buttonDelete.get(i).getId() && view.getTag().toString().trim().equals("Delete")){
+						Toast.makeText(MainActivity.this, "Delete : " + buttonDelete.get(i).getId(), Toast.LENGTH_SHORT).show();
+						int id = buttonDelete.get(i).getId();
+						deleteKategori(id);
+					}
+				}
+			}
+		}
+		
+		public void deleteKategori (int id) {
+			kategoriActivity.deleteKategori(id);
+			finish();
+			startActivity(getIntent());
+		} 
+	 
+	    // Mendapatkan Kategori melalui ID
+		public void getDataByID (int id) {
+			String kategoriEdit = null;
+			JSONArray arrayPersonal; 
+	 
+	        try {
+	        	arrayPersonal = new JSONArray(kategoriActivity.getKategoriById(id));
+	        	for (int i  = 0; i < arrayPersonal.length(); i++) {
+	        		JSONObject jsonChildNode = arrayPersonal.getJSONObject(i);
+	        		kategoriEdit = jsonChildNode.optString("kategori");
+	        		}
+	        	}
+	        catch (JSONException e) {
+	        	e.printStackTrace();
+	        } 
+	 
+	        LinearLayout layoutInput = new LinearLayout(this);
+	        layoutInput.setOrientation(LinearLayout.VERTICAL); 
+	 
+	        // Membuat id tersembunyi pada AlertDialog
+	        final TextView viewId = new TextView(this);
+	        viewId.setText(String.valueOf(id));
+	        viewId.setTextColor(Color.TRANSPARENT);
+	        layoutInput.addView(viewId); 
+	        
+	        final EditText editKategori = new EditText(this);
+	        editKategori.setText(kategoriEdit);
+	        layoutInput.addView(editKategori); 
+	 
+	        // Membuat AlertDialog untuk mengubah data di Kategori
+	        AlertDialog.Builder builderEditKategori = new AlertDialog.Builder(this);
+	        //builderEditKategori.setIcon(R.drawable.webse);
+	        builderEditKategori.setTitle("Update Kategori");
+	        builderEditKategori.setView(layoutInput);
+	        builderEditKategori.setPositiveButton("Update", new DialogInterface.OnClickListener() {
+	        	@Override             public void onClick(DialogInterface dialog, int which) {
+	        		String kategori = editKategori.getText().toString();
+	        		System.out.println("Kategori : " + kategori); 
+	 
+	                String laporan = kategoriActivity.updateKategori(viewId.getText().toString(), editKategori.getText().toString()); 
+	 
+	                Toast.makeText(MainActivity.this, laporan, Toast.LENGTH_SHORT).show(); 
+	 
+	                finish();
+	                startActivity(getIntent());
+	                }
+	        	}); 
+	 
+	        // Jika tidak ingin mengubah data pada Kategori
+	        builderEditKategori.setNegativeButton("Cancel", new DialogInterface.OnClickListener() {
+	        	@Override
+	        	public void onClick(DialogInterface dialog, int which) {
+	        		dialog.cancel();
+	        		}
+	        	}); 
+	 
+	        builderEditKategori.show();
+	        }
+		public void tambahKategori() {
+			LinearLayout layoutInput = new LinearLayout(this);
+			layoutInput.setOrientation(LinearLayout.VERTICAL); 
+	 
+	        final EditText editKategori = new EditText(this);
+	        editKategori.setHint("Kategori");
+	        layoutInput.addView(editKategori);
+	 
+	        // Membuat AlertDialog untuk menambahkan data pada Kategori 
+	        AlertDialog.Builder builderInsertKategori = new AlertDialog.Builder(this);
+	        //builderInsertKategori.setIcon(R.drawable.webse);
+	        builderInsertKategori.setTitle("Insert Kategori");
+	        builderInsertKategori.setView(layoutInput);
+	        builderInsertKategori.setPositiveButton("Insert", new DialogInterface.OnClickListener() {
+	        	@Override
+	        	public void onClick(DialogInterface dialog, int which) {
+	        		String kategori = editKategori.getText().toString();
+	        		System.out.println("Kategori : " + kategori); 
+	        
+            String laporan  = kategoriActivity.insertKategori(kategori);
+            Toast.makeText(MainActivity.this, laporan, Toast.LENGTH_SHORT).show(); 
+
+            finish();
+            startActivity(getIntent());
+            }
+	        	}); 
+
+    builderInsertKategori.setNegativeButton("Cancel", new DialogInterface.OnClickListener() {
+    	@Override
+    	public void onClick(DialogInterface dialog, int which) {
+    		dialog.cancel();
+    		}
+    	});
+    builderInsertKategori.show(); 
+
+
+} 
+
+@Override
+public boolean onCreateOptionsMenu(Menu menu) {
+	// Inflate the menu; this adds items to the action bar if it is present. 
+	getMenuInflater().inflate(R.menu.main, menu);
+	return true;
+		}
+}

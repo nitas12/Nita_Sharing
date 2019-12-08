@@ -1,0 +1,69 @@
+package org.si.perpuskategori; 
+ 
+public class KategoriActivity extends KoneksiActivity {
+	// sourcecode untuk URL ->URL menggunakan IP address default eclipse
+	String URL = "http://10.0.2.2/perpus_kategori/server.php";
+	String url = "";
+	String response = "";
+	
+	//menampilkan kategori dari database
+	public String tampilKategori() { 
+		try{
+			url = URL + "?operasi=view";
+			System.out.println("URL Tampil Kategori : " + url);
+			response = call(url);
+		}
+		catch(Exception e) {
+			
+		}
+		return response;
+		}
+	
+	//memasukan kategori baru ke dalam database
+	public String insertKategori(String kategori) {
+		try{
+			url = URL + "?operasi=insert&kategori=" + kategori;
+			System.out.println("URL Insert Kategori : " + url);
+			response = call(url);
+		}
+		catch (Exception e){
+		}
+		return response;
+		}
+	
+	//melihat kategori berdasarkan ID
+	public String getKategoriById (int id) {
+		try{
+			url=URL + "?operasi=get_kategori_by_id&id=" + id;
+			System.out.println("URL Insert Kategori : " + url);
+			response = call(url);
+			}
+		catch(Exception e) {
+		}
+		return response;
+		}
+	
+	//mengubah isi kategori
+	public String updateKategori(String id, String kategori) {
+		try{
+			url=URL + "?operasi=update&id=" + id + "&kategori=" + kategori;
+			System.out.println("URL Update Kategori : " + url);
+			response = call(url);
+		}
+		catch(Exception e){
+		}
+		return response;
+		}
+	
+	//coding hapus
+	public String deleteKategori (int id) {
+		try{
+			url = URL + "?operasi=delete&id=" + id;
+			System.out.println("URL Hapus Kategori : " + url);
+			response = call(url);
+		}
+		catch(Exception e){
+		}
+		return response;
+	}
+}
